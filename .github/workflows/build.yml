@@ -19,15 +19,19 @@ jobs:
       - name: Build APK with script
         run: ./build.sh
 
-      - name: Sign APK with Java Keytool and Jarsigner
+      - name: Align and Sign APK properly
         run: |
           keytool -genkey -v -keystore debug.keystore -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 -storepass android -keypass android -dname "CN=Android Debug,O=Android,C=US"
           
           RAW_APK=$(find out -name "*.apk" | head -n 1)
           
-          cp "$RAW_APK" FreeMyTV-Ready.apk
+          # Alinhamento obrigatório exigido pelo Android moderno da TV
+          zipalign -v -p 4 "$RAW_APK" aligned.apk
           
-          jarsigner -keystore debug.keystore -storepass android -keypass android FreeMyTV-Ready.apk androiddebugkey
+          # Assinatura com a keystore gerada
+          jarsigner -keystore debug.keystore -storepass android -keypass android aligned.apk androiddebugkey
+          
+          cp aligned.apk FreeMyTV-Ready.apk
 
       - name: Upload Signed APK Artifact
         uses: actions/upload-artifact@v4
