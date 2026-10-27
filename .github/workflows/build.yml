@@ -1,4 +1,4 @@
-name: Build APK
+name: Build and Sign APK
 
 on:
   push:
@@ -9,15 +9,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
-      - name: Build APK
+
+      - name: Build APK with script
         run: ./build.sh
-      - name: Upload APK Artifact
+
+      - name: Sign APK with Debug Keystore
+        run: |
+          keytool -genkey -v -keystore debug.keystore -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 -storepass android -keypass android -dname "CN=Android Debug,O=Android,C=US"
+          # Localizar o apk gerado e assinar/alinhar
+          APK_FILE=$(find out -name "*.apk" | head -n 1)
+          jarsigner -keystore debug.keystore -storepass android -keypass android "$APK_FILE" androiddebugkey
+          # Copiar para um nome limpo
+          cp "$APK_FILE" ./FreeMyTV-Ready.apk
+
+      - name: Upload Signed APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: FreeMyTV-APK
-          path: out/*.apk
+          name: FreeMyTV-Ready
+          path: FreeMyTV-Ready.apk
