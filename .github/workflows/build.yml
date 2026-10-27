@@ -25,10 +25,8 @@ jobs:
           
           RAW_APK=$(find out -name "*.apk" | head -n 1)
           
-          # Alinhamento obrigatório exigido pelo Android moderno da TV
           zipalign -v -p 4 "$RAW_APK" aligned.apk
           
-          # Assinatura com a keystore gerada
           jarsigner -keystore debug.keystore -storepass android -keypass android aligned.apk androiddebugkey
           
           cp aligned.apk FreeMyTV-Ready.apk
